@@ -11,7 +11,7 @@ yarn start
 or, for extra debug information:
 
 ```
-DEBUG=pushpin-peer yarn start <data url>
+DEBUG=pushpin-peer yarn start
 ```
 
 The output of either of these commands will be a Pushpin url. You can use this url in Pushpin to access the peer.
