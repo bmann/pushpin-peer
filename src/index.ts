@@ -2,7 +2,7 @@ import { Repo } from "hypermerge/dist/Repo"
 //import discoverySwarm from "discovery-swarm"
 //import datDefaults from "dat-swarm-defaults"
 import DiscoverySwarm from "discovery-cloud-client"
-import * as PushpinPeer from "./PushpinPeer"
+import * as StoragePeer from "./StoragePeer"
 import * as PushpinUrl from "./PushpinUrl"
 import fs from "fs"
 import path from "path"
@@ -52,7 +52,7 @@ interface ContactDoc {
 const rootDataUrl = getRootDoc(repo)
 
 // PushpinPeer init
-const pushpinPeer = new PushpinPeer.PushpinPeer(repo)
+const pushpinPeer = new StoragePeer.StoragePeer(repo)
 pushpinPeer.swarm(rootDataUrl)
 heartbeatAll(repo, rootDataUrl)
 

@@ -9,7 +9,7 @@ const debug = require("debug")("pushpin-peer")
 // We currently re-traverse documents on every update. We could instead
 // check the operations in each block for links and swarm them if we've never
 // seen them.
-export class PushpinPeer {
+export class StoragePeer {
   repo: Repo
   handles: Map<string, Handle<any>>
   files: Set<string>
