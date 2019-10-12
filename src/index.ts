@@ -7,6 +7,7 @@ import * as PushpinUrl from "./PushpinUrl"
 import fs from "fs"
 import path from "path"
 import { DocUrl } from "hypermerge"
+import Hyperswarm from "hyperswarm"
 
 const STORAGE_PATH = process.env.REPO_ROOT || "./.data"
 const REPO_PATH = path.join(STORAGE_PATH, "hypermerge")
@@ -21,13 +22,8 @@ program.description(
 // Repo init
 // TODO: use a real location, not the repo root
 const repo = new Repo({ path: REPO_PATH })
-const swarm = new DiscoverySwarm({
-  url: "wss://discovery-cloud.herokuapp.com",
-  id: repo.swarmKey,
-  stream: repo.stream,
-})
-// TODO: fix this any
-repo.setSwarm(swarm as any)
+const swarm = Hyperswarm()
+repo.setSwarm(swarm)
 repo.startFileServer("/tmp/storage-peer.sock")
 
 // TODO: we already define this in Pushpin, strange to define it twice.
@@ -63,11 +59,10 @@ console.log(`Storage Peer Url: ${pushpinUrl}`)
 // Create necessary root documents
 function getRootDoc(repo: Repo) {
   return getOrCreateFromFile(ROOT_DOC_PATH, () => {
-    const url = repo.create()
-    repo.change(url, (doc: any) => {
-      doc.name = "Storage Peer"
-      doc.icon = "cloud"
-      doc.storedUrls = {}
+    const url = repo.create({
+      name: "Storage Peer",
+      icon: "cloud",
+      storedUrls: {},
     })
     return url
   })
