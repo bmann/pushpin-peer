@@ -25,6 +25,7 @@
     "discovery-cloud-client": "github:inkandswitch/discovery-cloud-client",
     "discovery-swarm": "^5.1.4",
     "hypermerge": "github:automerge/hypermerge",
+    "hyperswarm": "^2.2.0",
     "js-crc": "^0.2.0",
     "lodash": "^4.17.11",
     "mime-types": "^2.1.22",
