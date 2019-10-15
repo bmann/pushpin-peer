@@ -1,7 +1,4 @@
 import { Repo } from "hypermerge/dist/Repo"
-//import discoverySwarm from "discovery-swarm"
-//import datDefaults from "dat-swarm-defaults"
-import DiscoverySwarm from "discovery-cloud-client"
 import * as StoragePeer from "./StoragePeer"
 import * as PushpinUrl from "./PushpinUrl"
 import fs from "fs"
@@ -33,15 +30,6 @@ interface RootDoc {
   storedUrls: {
     [contactId: string]: string
   }
-}
-
-interface ContactDoc {
-  name: string
-  color: string
-  avatarDocId: string
-  hypermergeUrl: string // Used by workspace
-  offeredUrls?: { [url: string]: string[] } // Used by share, a map of contact id to documents offered.
-  devices?: string[]
 }
 
 //const deviceUrl = getDevice(repo)
