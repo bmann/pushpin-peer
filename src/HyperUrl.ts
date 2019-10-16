@@ -33,11 +33,3 @@ export const fromDocumentId = (id: string) => {
 export const fromFileId = (id: string) => {
   return `hyperfile:/${id}`
 }
-
-export const toDiscoveryKey = (url: string): string => {
-  // TODO: Should not need to know how to generate a discovery key here.
-  const id = toId(url)
-  const dkBuffer = hypercore.discoveryKey(Base58.decode(id))
-  const dk = Base58.encode(dkBuffer)
-  return dk
-}
