@@ -2,7 +2,7 @@ import * as HyperUrl from "./HyperUrl"
 import { crc16 } from "js-crc"
 import Base58 from "bs58"
 
-const urlPattern = /pushpin:\/\/(\w+)\/(\w+)/
+const urlPattern = /^hypermerge:\/(\w+)(\?pushpinContentType=[^&=]+)$/
 
 export interface Parts {
   contentType: string
@@ -19,7 +19,7 @@ export function isPushpinUrl(val: any) {
 }
 
 export function parts(url: string): Parts {
-  const [, contentType, docId]: Array<string | undefined> =
+  const [, docId, contentType]: Array<string | undefined> =
     url.match(urlPattern) || []
   if (!docId) {
     throw new Error(`Invalid pushpin url: ${url}`)
@@ -31,7 +31,7 @@ export function createDocumentLink(type: string, url: string): string {
   if (!url.match("hypermerge:/")) {
     throw new Error("expecting a hypermerge URL as input")
   }
-  if (url.match("pushpin")) {
+  if (url.match("pushpinContentType")) {
     throw new Error(
       'so-called ID contains "pushpin". you appear to have passed a URL as an ID',
     )
@@ -42,7 +42,7 @@ export function createDocumentLink(type: string, url: string): string {
   if (!type) {
     throw new Error("no type when creating URL")
   }
-  return withCrc(`pushpin://${type}/${id}`)
+  return `hypermerge:/${id}?pushpinContentType=${type}`
 }
 
 export const withCrc = (str: string) => `${str}/${encode(crc16(str))}`
