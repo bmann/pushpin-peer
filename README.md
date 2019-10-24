@@ -8,6 +8,12 @@ A cloud peer for [pushpin](https://github.com/inkandswitch/pushpin) to keep data
 yarn start
 ```
 
+Options:
+
+```
+  -p, --port <number>  Set a custom port for incoming connections
+```
+
 or, for extra debug information:
 
 ```
@@ -29,4 +35,3 @@ Then, open chrome and navigate to `chrome://inspect`. You should see the node pr
 ## Notes and Known Issues
 
 The process will occasionally crash from a hypermerge error, usually a "Block not downloaded" error. Just restarting the process usually fixes the issue. :shrugging-man:
-

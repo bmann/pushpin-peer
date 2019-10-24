@@ -13,14 +13,14 @@ const ROOT_DOC_PATH = path.join(STORAGE_PATH, "root")
 // Program config
 const program = require("commander")
 
-program.option(
-  "-p, --port <number>",
-  "Set a custom port for incoming connections",
-  (port: string) => parseInt(port, 10),
-)
 program
   .description(
     "A cloud peer for pushpin to keep data warm while your computer is sleeping.",
+  )
+  .option(
+    "-p, --port <number>",
+    "Set a custom port for incoming connections.",
+    (port: string) => parseInt(port, 10),
   )
   .parse(process.argv)
 
