@@ -1,4 +1,5 @@
 import { Repo } from "hypermerge/dist/Repo"
+import FileServer from "hypermerge/dist/FileServer"
 import * as StoragePeer from "./StoragePeer"
 import * as PushpinUrl from "./PushpinUrl"
 import fs from "fs"
@@ -22,6 +23,11 @@ program
     "Set a custom port for incoming connections.",
     (port: string) => parseInt(port, 10),
   )
+  .option(
+    "-f, --file-server-port <number>",
+    "Serve hyperfiles via http.",
+    (port: string) => parseInt(port, 10),
+  )
   .parse(process.argv)
 
 // Repo init
@@ -32,6 +38,12 @@ const swarm = Hyperswarm()
 if (program.port) {
   swarm.listen(program.port)
   console.log("Listening on port:", program.port)
+}
+
+if (program.fileServerPort) {
+  console.log("Serving hyperfiles on port:", program.fileServerPort)
+  const fileServer = new FileServer(repo.back.files)
+  fileServer.listen({ host: "127.0.0.1", port: program.fileServerPort })
 }
 
 repo.setSwarm(swarm)
