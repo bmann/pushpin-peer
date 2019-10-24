@@ -43,7 +43,7 @@ if (program.port) {
 if (program.fileServerPort) {
   console.log("Serving hyperfiles on port:", program.fileServerPort)
   const fileServer = new FileServer(repo.back.files)
-  fileServer.listen({ host: "127.0.0.1", port: program.fileServerPort })
+  fileServer.listen({ host: "0.0.0.0", port: program.fileServerPort })
 }
 
 repo.setSwarm(swarm)
