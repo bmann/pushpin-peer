@@ -7,8 +7,8 @@
   "license": "BSD",
   "private": true,
   "scripts": {
-    "start": "yarn build && node ./dist/index.js",
-    "start:inspect": "yarn build && node --inspect-brk ./dist/index.js",
+    "start": "ts-node src",
+    "start:inspect": "node -r ts-node/register --inspect-brk src",
     "build": "tsc -p ."
   },
   "dependencies": {

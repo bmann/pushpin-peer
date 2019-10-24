@@ -12,14 +12,28 @@ const ROOT_DOC_PATH = path.join(STORAGE_PATH, "root")
 
 // Program config
 const program = require("commander")
-program.description(
-  "A cloud peer for pushpin to keep data warm while your computer is sleeping.",
+
+program.option(
+  "-p, --port <number>",
+  "Set a custom port for incoming connections",
+  (port: string) => parseInt(port, 10),
 )
+program
+  .description(
+    "A cloud peer for pushpin to keep data warm while your computer is sleeping.",
+  )
+  .parse(process.argv)
 
 // Repo init
 // TODO: use a real location, not the repo root
 const repo = new Repo({ path: REPO_PATH })
 const swarm = Hyperswarm()
+
+if (program.port) {
+  swarm.listen(program.port)
+  console.log("Listening on port:", program.port)
+}
+
 repo.setSwarm(swarm)
 repo.startFileServer("/tmp/storage-peer.sock")
 
