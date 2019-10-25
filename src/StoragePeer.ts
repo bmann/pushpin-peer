@@ -48,7 +48,7 @@ export class StoragePeer {
         // We don't need to subscribe to hyperfile updates, we just need to swarm
         this.files.add(url)
         setImmediate(() =>
-          this.repo.files.read(url as any).then(() => {
+          this.repo.files.header(url as any).then(() => {
             debug(`Read file ${url}`)
           }),
         )
