@@ -1,5 +1,5 @@
 import { isPlainObject } from "lodash"
-
+import { Text } from "automerge"
 
 export const WARNING_STACK_SIZE = 1000
 export interface SelectFn<T> {
@@ -23,7 +23,13 @@ export function iterativeDFS<T>(root: any, select: SelectFn<T>): T[] {
       return results
     }
     const obj = stack.pop()
-    if (isPlainObject(obj)) {
+    // Note: Manually check for Automerge.Text and don't inspect these. This will
+    // blow up the stack size (which may not actually matter, but there's not point
+    // in checking Automerge.Text anyway)
+    // TODO: genericize this, maybe with a skip function, e.g. `if (skip(obj)) {`
+    if (obj instanceof Text) {
+      continue
+    } else if (isPlainObject(obj)) {
       Object.entries(obj).forEach((entry: any) => stack.push(entry))
     } else if (obj && obj.forEach) {
       obj.forEach((val: any) => stack.push(val))
