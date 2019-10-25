@@ -1,5 +1,7 @@
 import { isPlainObject } from "lodash"
-import { Text } from "automerge"
+// This *must* be the automerge used by hypermerge, otherwise the instanceof
+// checks below will fail.
+import Automerge from "automerge"
 
 export const WARNING_STACK_SIZE = 1000
 export interface SelectFn<T> {
@@ -27,7 +29,7 @@ export function iterativeDFS<T>(root: any, select: SelectFn<T>): T[] {
     // blow up the stack size (which may not actually matter, but there's not point
     // in checking Automerge.Text anyway)
     // TODO: genericize this, maybe with a skip function, e.g. `if (skip(obj)) {`
-    if (obj instanceof Text) {
+    if (obj instanceof Automerge.Text) {
       continue
     } else if (isPlainObject(obj)) {
       Object.entries(obj).forEach((entry: any) => stack.push(entry))
