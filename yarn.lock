@@ -575,6 +575,7 @@ hypercore@^8.2.5:
     random-access-file "^2.1.3"
     random-access-memory "^3.0.0"
     simple-message-channels "^1.2.1"
+    sodium-native "^2.4.6"
     streamx "^2.5.0"
 
 hyperswarm@^2.2.0:
