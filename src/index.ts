@@ -6,7 +6,9 @@ import path from "path"
 import { DocUrl } from "hypermerge"
 import Hyperswarm from "hyperswarm"
 
-const STORAGE_PATH = process.env.REPO_ROOT || "./.data"
+// TODO: Use a real storage path, not just the repo root.
+const VERSION = "v1"
+const STORAGE_PATH = path.resolve(`./.data/${VERSION}`)
 const REPO_PATH = path.join(STORAGE_PATH, "hypermerge")
 const ROOT_DOC_PATH = path.join(STORAGE_PATH, "root")
 const KEY_PAIR_PATH = path.join(STORAGE_PATH, "keys")
@@ -33,10 +35,14 @@ program
 init()
 
 async function init() {
+  console.log("Storage Peer")
+
   // Repo init
   // TODO: use a real location, not the repo root
   const repo = new Repo({ path: REPO_PATH })
   const swarm = Hyperswarm()
+
+  console.log("Storage directory:", STORAGE_PATH)
 
   if (program.port) {
     swarm.listen(program.port)
@@ -57,7 +63,7 @@ async function init() {
   const storagePeer = new StoragePeer.StoragePeer(repo, keyPair, storagePeerDoc)
   heartbeatContacts(repo, storagePeerDoc)
 
-  console.log(`Storage Peer Url: ${storagePeer.shareLink}`)
+  console.log(`Share link: ${storagePeer.shareLink}`)
 
   async function getOrCreateKeyPair(repo: Repo) {
     const keyPair = JSON.parse(
