@@ -1,9 +1,19 @@
-import { Repo, Handle } from "hypermerge/dist"
+import { Repo, Handle, Crypto, DocUrl } from "hypermerge/dist"
 import * as Traverse from "./Traverse"
 import * as HyperUrl from "./HyperUrl"
 import * as PushpinUrl from "./PushpinUrl"
 
 const debug = require("debug")("pushpin-peer")
+
+export interface RootDoc {
+  name: string
+  icon: string
+  publicKey: Crypto.EncodedPublicEncryptionKey
+  publicKeySignature: Crypto.EncodedSignature
+  storedUrls: {
+    [contactId: string]: Crypto.EncodedSealedBox /* workspace url */
+  }
+}
 
 // TODO: Inspect blocks for links rather than traversing the doc.
 // We currently re-traverse documents on every update. We could instead
@@ -11,13 +21,23 @@ const debug = require("debug")("pushpin-peer")
 // seen them.
 export class StoragePeer {
   repo: Repo
+  rootDoc: DocUrl
+  keyPair: Crypto.EncodedEncryptionKeyPair
   handles: Map<string, Handle<any>>
   files: Set<string>
 
-  constructor(repo: Repo) {
+  constructor(
+    repo: Repo,
+    rootDoc: DocUrl,
+    keyPair: Crypto.EncodedEncryptionKeyPair,
+  ) {
     this.repo = repo
+    this.rootDoc = rootDoc
+    this.keyPair = keyPair
     this.handles = new Map()
     this.files = new Set()
+
+    this.swarmRootDoc(rootDoc)
   }
 
   get stats() {
@@ -27,7 +47,26 @@ export class StoragePeer {
     }
   }
 
-  swarm = (url: string) => {
+  swarmRootDoc(url: DocUrl) {
+    const handle = this.repo.open<RootDoc>(url)
+    handle.subscribe(rootDoc => {
+      Object.entries(rootDoc.storedUrls).forEach(
+        async ([encryptedContactUrl, encryptedWorkspaceUrl]) => {
+          // const contactUrl = await this.repo.crypto.openSealedBox(
+          //   this.keyPair,
+          //   encryptedContactUrl as Crypto.EncodedSealedBox,
+          // )
+          const workspaceUrl = await this.repo.crypto.openSealedBox(
+            this.keyPair,
+            encryptedWorkspaceUrl as Crypto.EncodedSealedBox,
+          )
+          this.swarm(workspaceUrl)
+        },
+      )
+    })
+  }
+
+  swarm(url: string) {
     // Handle pushpin urls
     if (PushpinUrl.isPushpinUrl(url)) {
       debug(`Parsing pushpin url ${url}`)
@@ -56,7 +95,7 @@ export class StoragePeer {
     }
   }
 
-  shouldSwarm = (val: any) => {
+  shouldSwarm(val: any) {
     return HyperUrl.isHyperUrl(val) || PushpinUrl.isPushpinUrl(val)
   }
 
@@ -68,7 +107,7 @@ export class StoragePeer {
     }
   }
 
-  close = () => {
+  close() {
     this.handles.forEach(handle => handle.close())
     this.handles.clear()
     this.files.clear()

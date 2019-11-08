@@ -1,4 +1,4 @@
-import { Repo } from "hypermerge/dist/Repo"
+import { Repo, Crypto } from "hypermerge"
 import FileServer from "hypermerge/dist/FileServer"
 import * as StoragePeer from "./StoragePeer"
 import * as PushpinUrl from "./PushpinUrl"
@@ -10,6 +10,7 @@ import Hyperswarm from "hyperswarm"
 const STORAGE_PATH = process.env.REPO_ROOT || "./.data"
 const REPO_PATH = path.join(STORAGE_PATH, "hypermerge")
 const ROOT_DOC_PATH = path.join(STORAGE_PATH, "root")
+const KEY_PAIR_PATH = path.join(STORAGE_PATH, "keys")
 
 // Program config
 const program = require("commander")
@@ -30,107 +31,122 @@ program
   )
   .parse(process.argv)
 
-// Repo init
-// TODO: use a real location, not the repo root
-const repo = new Repo({ path: REPO_PATH })
-const swarm = Hyperswarm()
+init()
 
-if (program.port) {
-  swarm.listen(program.port)
-  console.log("Listening on port:", program.port)
-}
+async function init() {
+  // Repo init
+  // TODO: use a real location, not the repo root
+  const repo = new Repo({ path: REPO_PATH })
+  const swarm = Hyperswarm()
 
-if (program.fileServerPort) {
-  console.log("Serving hyperfiles on port:", program.fileServerPort)
-  const fileServer = new FileServer(repo.back.files)
-  fileServer.listen({ host: "0.0.0.0", port: program.fileServerPort })
-}
-
-repo.setSwarm(swarm)
-repo.startFileServer("/tmp/storage-peer.sock")
-
-// TODO: we already define this in Pushpin, strange to define it twice.
-interface RootDoc {
-  name: string
-  icon: string
-  storedUrls: {
-    [contactId: string]: string
+  if (program.port) {
+    swarm.listen(program.port)
+    console.log("Listening on port:", program.port)
   }
-}
 
-//const deviceUrl = getDevice(repo)
-const rootDataUrl = getRootDoc(repo)
+  if (program.fileServerPort) {
+    console.log("Serving hyperfiles on port:", program.fileServerPort)
+    const fileServer = new FileServer(repo.back.files)
+    fileServer.listen({ host: "0.0.0.0", port: program.fileServerPort })
+  }
 
-// PushpinPeer init
-const pushpinPeer = new StoragePeer.StoragePeer(repo)
-pushpinPeer.swarm(rootDataUrl)
-heartbeatAll(repo, rootDataUrl)
+  repo.setSwarm(swarm)
+  repo.startFileServer("/tmp/storage-peer.sock")
 
-const pushpinUrl = PushpinUrl.createDocumentLink("storage-peer", rootDataUrl)
+  //const deviceUrl = getDevice(repo)
+  const keyPair = await getKeyPair(repo)
+  const rootDataUrl = await getRootDoc(repo, keyPair)
 
-console.log(`Storage Peer Url: ${pushpinUrl}`)
+  // PushpinPeer init
+  const pushpinPeer = new StoragePeer.StoragePeer(repo, rootDataUrl, keyPair)
+  //pushpinPeer.swarm(rootDataUrl)
+  heartbeatAll(repo, rootDataUrl)
 
-// Create necessary root documents
-function getRootDoc(repo: Repo) {
-  return getOrCreateFromFile(ROOT_DOC_PATH, () => {
-    const url = repo.create({
-      name: "Storage Peer",
-      icon: "cloud",
-      storedUrls: {},
+  const pushpinUrl = PushpinUrl.createDocumentLink("storage-peer", rootDataUrl)
+
+  async function getKeyPair(repo: Repo) {
+    const keyPair = JSON.parse(
+      await getOrCreateFromFile(KEY_PAIR_PATH, async () => {
+        return JSON.stringify(await repo.crypto.encryptionKeyPair())
+      }),
+    )
+    return keyPair
+  }
+
+  // Create necessary root documents
+  async function getRootDoc(
+    repo: Repo,
+    keyPair: Crypto.EncodedEncryptionKeyPair,
+  ) {
+    const url = await getOrCreateFromFile(ROOT_DOC_PATH, () => {
+      const url = repo.create({
+        name: "Storage Peer",
+        icon: "cloud",
+        storedUrls: {},
+      })
+      return url
+    })
+
+    const signature = await repo.crypto.sign(url, keyPair.publicKey)
+    repo.change<StoragePeer.RootDoc>(url, async doc => {
+      if (!doc.publicKey || !doc.publicKeySignature) {
+        doc.publicKeySignature = signature
+        doc.publicKey = keyPair.publicKey
+      }
     })
     return url
-  })
-}
-
-function getOrCreateFromFile(file: string, create: Function) {
-  try {
-    const content = fs.readFileSync(file, { encoding: "utf-8" })
-    return content
-  } catch {
-    const content = create()
-    fs.writeFileSync(file, content)
-    return content
   }
-}
 
-interface HeartbeatMessage {
-  contact: string
-  device: string
-  heartbeat?: boolean
-  departing?: boolean
-  data?: any
-}
+  async function getOrCreateFromFile(file: string, create: Function) {
+    try {
+      const content = fs.readFileSync(file, { encoding: "utf-8" })
+      return content
+    } catch {
+      const content = await create()
+      fs.writeFileSync(file, content)
+      return content
+    }
+  }
 
-function heartbeatAll(repo: Repo, rootUrl: DocUrl) {
-  const interval = setInterval(() => {
-    repo.doc(rootUrl, (root: RootDoc) => {
-      // Heartbeat on all stored contacts
-      Object.keys(root.storedUrls).forEach(contactId => {
-        const msg = {
-          contact: contactId,
+  interface HeartbeatMessage {
+    contact: string
+    device: string
+    heartbeat?: boolean
+    departing?: boolean
+    data?: any
+  }
+
+  function heartbeatAll(repo: Repo, rootUrl: DocUrl) {
+    const interval = setInterval(() => {
+      repo.doc(rootUrl, (root: StoragePeer.RootDoc) => {
+        // Heartbeat on all stored contacts
+        Object.keys(root.storedUrls).forEach(contactId => {
+          const msg = {
+            contact: contactId,
+            device: rootUrl,
+            hearbeat: true,
+            data: {
+              [contactId]: {
+                onlineStatus: {},
+              },
+            },
+          }
+          repo.message(contactId as DocUrl, msg)
+        })
+
+        // Heartbeat on pushpin-peer device.
+        const message = {
+          contact: rootUrl,
           device: rootUrl,
-          hearbeat: true,
+          heartbeat: true,
           data: {
-            [contactId]: {
+            [rootUrl]: {
               onlineStatus: {},
             },
           },
         }
-        repo.message(contactId as DocUrl, msg)
+        repo.message(rootUrl, message)
       })
-
-      // Heartbeat on pushpin-peer device.
-      const message = {
-        contact: rootUrl,
-        device: rootUrl,
-        heartbeat: true,
-        data: {
-          [rootUrl]: {
-            onlineStatus: {},
-          },
-        },
-      }
-      repo.message(rootUrl, message)
-    })
-  }, 1000)
+    }, 1000)
+  }
 }
