@@ -1,7 +1,6 @@
 import { Repo, Crypto } from "hypermerge"
 import FileServer from "hypermerge/dist/FileServer"
 import * as StoragePeer from "./StoragePeer"
-import * as PushpinUrl from "./PushpinUrl"
 import fs from "fs"
 import path from "path"
 import { DocUrl } from "hypermerge"
@@ -53,19 +52,14 @@ async function init() {
   repo.setSwarm(swarm)
   repo.startFileServer("/tmp/storage-peer.sock")
 
-  //const deviceUrl = getDevice(repo)
-  const keyPair = await getKeyPair(repo)
-  const rootDataUrl = await getRootDoc(repo, keyPair)
+  const keyPair = await getOrCreateKeyPair(repo)
+  const storagePeerDoc = await getOrCreateStoragePeerDoc(repo, keyPair)
+  const storagePeer = new StoragePeer.StoragePeer(repo, keyPair, storagePeerDoc)
+  heartbeatContacts(repo, storagePeerDoc)
 
-  // PushpinPeer init
-  const pushpinPeer = new StoragePeer.StoragePeer(repo, rootDataUrl, keyPair)
-  //pushpinPeer.swarm(rootDataUrl)
-  heartbeatAll(repo, rootDataUrl)
+  console.log(`Storage Peer Url: ${storagePeer.shareLink}`)
 
-  const pushpinUrl = PushpinUrl.createDocumentLink("storage-peer", rootDataUrl)
-  console.log(`Storage Peer Url: ${pushpinUrl}`)
-
-  async function getKeyPair(repo: Repo) {
+  async function getOrCreateKeyPair(repo: Repo) {
     const keyPair = JSON.parse(
       await getOrCreateFromFile(KEY_PAIR_PATH, async () => {
         return JSON.stringify(await repo.crypto.encryptionKeyPair())
@@ -74,28 +68,13 @@ async function init() {
     return keyPair
   }
 
-  // Create necessary root documents
-  async function getRootDoc(
+  async function getOrCreateStoragePeerDoc(
     repo: Repo,
     keyPair: Crypto.EncodedEncryptionKeyPair,
   ) {
-    const url = await getOrCreateFromFile(ROOT_DOC_PATH, () => {
-      const url = repo.create({
-        name: "Storage Peer",
-        icon: "cloud",
-        storedUrls: {},
-      })
-      return url
+    return await getOrCreateFromFile(ROOT_DOC_PATH, () => {
+      return StoragePeer.createRootDoc(repo, keyPair.publicKey)
     })
-
-    const signature = await repo.crypto.sign(url, keyPair.publicKey)
-    repo.change<StoragePeer.RootDoc>(url, async doc => {
-      if (!doc.publicKey || !doc.publicKeySignature) {
-        doc.publicKeySignature = signature
-        doc.publicKey = keyPair.publicKey
-      }
-    })
-    return url
   }
 
   async function getOrCreateFromFile(file: string, create: Function) {
@@ -117,15 +96,15 @@ async function init() {
     data?: any
   }
 
-  function heartbeatAll(repo: Repo, rootUrl: DocUrl) {
+  function heartbeatContacts(repo: Repo, storagePeerUrl: DocUrl) {
     const interval = setInterval(() => {
-      repo.doc(rootUrl, (root: StoragePeer.RootDoc) => {
+      repo.doc(storagePeerUrl, (root: StoragePeer.StoragePeerDoc) => {
         // Heartbeat on all stored contacts
         Object.keys(root.registry).forEach(contactId => {
-          const msg = {
+          const msg: HeartbeatMessage = {
             contact: contactId,
-            device: rootUrl,
-            hearbeat: true,
+            device: storagePeerUrl,
+            heartbeat: true,
             data: {
               [contactId]: {
                 onlineStatus: {},
@@ -136,17 +115,17 @@ async function init() {
         })
 
         // Heartbeat on pushpin-peer device.
-        const message = {
-          contact: rootUrl,
-          device: rootUrl,
+        const message: HeartbeatMessage = {
+          contact: storagePeerUrl,
+          device: storagePeerUrl,
           heartbeat: true,
           data: {
-            [rootUrl]: {
+            [storagePeerUrl]: {
               onlineStatus: {},
             },
           },
         }
-        repo.message(rootUrl, message)
+        repo.message(storagePeerUrl, message)
       })
     }, 1000)
   }

@@ -5,39 +5,63 @@ import * as PushpinUrl from "./PushpinUrl"
 
 const debug = require("debug")("pushpin-peer")
 
-export interface RootDoc {
+export interface StoragePeerDoc {
   name: string
   icon: string
-  publicKey: Crypto.EncodedPublicEncryptionKey
-  publicKeySignature: Crypto.EncodedSignature
+  encryptionKey?: Crypto.EncodedPublicEncryptionKey
+  encryptionKeySignature?: Crypto.EncodedSignature
   registry: {
-    [contactId: string]: Crypto.EncodedSealedBox /* workspace url */
+    [contactId: string]: Crypto.EncodedSealedBox /* sealed workspace url */
   }
 }
 
-// TODO: Inspect blocks for links rather than traversing the doc.
-// We currently re-traverse documents on every update. We could instead
-// check the operations in each block for links and swarm them if we've never
-// seen them.
+export async function createRootDoc(
+  repo: Repo,
+  encryptionKey: Crypto.EncodedPublicEncryptionKey,
+) {
+  // NOTE: We need the url to generate the encryption key signature. This means
+  // there will be a valid state of the document where the key and its signature are
+  // not present in the document.
+  const url = repo.create<StoragePeerDoc>({
+    name: "Storage Peer",
+    icon: "cloud",
+    registry: {},
+  })
+
+  const encryptionKeySignature = await repo.crypto.sign(url, encryptionKey)
+  repo.change<StoragePeerDoc>(url, async doc => {
+    doc.encryptionKey = encryptionKey
+    doc.encryptionKeySignature = encryptionKeySignature
+  })
+
+  return url
+}
+
 export class StoragePeer {
   repo: Repo
-  rootDoc: DocUrl
   keyPair: Crypto.EncodedEncryptionKeyPair
-  handles: Map<string, Handle<any>>
-  files: Set<string>
+  rootDocUrl: DocUrl
+  shareLink: PushpinUrl.PushpinUrl
+  private handles: Map<string, Handle<any>>
+  private files: Set<string>
 
   constructor(
     repo: Repo,
-    rootDoc: DocUrl,
     keyPair: Crypto.EncodedEncryptionKeyPair,
+    rootDocUrl: DocUrl,
   ) {
     this.repo = repo
-    this.rootDoc = rootDoc
+    this.rootDocUrl = rootDocUrl
     this.keyPair = keyPair
     this.handles = new Map()
     this.files = new Set()
 
-    this.swarmRootDoc(rootDoc)
+    this.shareLink = PushpinUrl.createDocumentLink(
+      "storage-peer",
+      this.rootDocUrl,
+    )
+
+    this.swarmRoot(rootDocUrl)
   }
 
   get stats() {
@@ -47,27 +71,25 @@ export class StoragePeer {
     }
   }
 
-  swarmRootDoc(url: DocUrl) {
-    const handle = this.repo.open<RootDoc>(url)
+  swarmRoot(url: DocUrl) {
+    const handle = this.repo.open<StoragePeerDoc>(url)
     handle.subscribe(rootDoc => {
-      Object.entries(rootDoc.registry).forEach(
-        async ([encryptedContactUrl, encryptedWorkspaceUrl]) => {
-          const workspaceUrl = await this.repo.crypto.openSealedBox(
-            this.keyPair,
-            encryptedWorkspaceUrl as Crypto.EncodedSealedBox,
-          )
-          this.swarm(workspaceUrl)
-        },
-      )
+      Object.values(rootDoc.registry).forEach(async sealedWorkspaceUrl => {
+        const workspaceUrl = await this.repo.crypto.openSealedBox(
+          this.keyPair,
+          sealedWorkspaceUrl,
+        )
+        this.onUrl(workspaceUrl)
+      })
     })
   }
 
-  swarm = (url: string) => {
+  onUrl = (url: string) => {
     // Handle pushpin urls
     if (PushpinUrl.isPushpinUrl(url)) {
       debug(`Parsing pushpin url ${url}`)
       const { docId } = PushpinUrl.parts(url)
-      this.swarm(HyperUrl.fromDocumentId(docId))
+      this.onUrl(HyperUrl.fromDocumentId(docId))
     }
     // Handle hypermerge and hyperfile urls
     else if (!this.handles.has(url) && !this.files.has(url)) {
@@ -91,16 +113,16 @@ export class StoragePeer {
     }
   }
 
-  shouldSwarm(val: any) {
-    return HyperUrl.isHyperUrl(val) || PushpinUrl.isPushpinUrl(val)
-  }
-
   onDocumentUpdate = (url: string) => {
     return (doc: any) => {
       debug(`Update for ${url}`)
       const urls = Traverse.iterativeDFS<string>(doc, this.shouldSwarm)
-      urls.forEach(this.swarm)
+      urls.forEach(this.onUrl)
     }
+  }
+
+  shouldSwarm(val: any) {
+    return HyperUrl.isHyperUrl(val) || PushpinUrl.isPushpinUrl(val)
   }
 
   close() {

@@ -1,6 +1,4 @@
 import { isString } from "lodash"
-import * as hypercore from "hypermerge/dist/hypercore"
-import * as Base58 from "bs58"
 import { DocUrl } from "hypermerge"
 
 // TODO: All of this logic should be in hypermerge
