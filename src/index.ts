@@ -63,6 +63,7 @@ async function init() {
   heartbeatAll(repo, rootDataUrl)
 
   const pushpinUrl = PushpinUrl.createDocumentLink("storage-peer", rootDataUrl)
+  console.log(`Storage Peer Url: ${pushpinUrl}`)
 
   async function getKeyPair(repo: Repo) {
     const keyPair = JSON.parse(
@@ -120,7 +121,7 @@ async function init() {
     const interval = setInterval(() => {
       repo.doc(rootUrl, (root: StoragePeer.RootDoc) => {
         // Heartbeat on all stored contacts
-        Object.keys(root.storedUrls).forEach(contactId => {
+        Object.keys(root.registry).forEach(contactId => {
           const msg = {
             contact: contactId,
             device: rootUrl,

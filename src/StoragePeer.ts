@@ -10,7 +10,7 @@ export interface RootDoc {
   icon: string
   publicKey: Crypto.EncodedPublicEncryptionKey
   publicKeySignature: Crypto.EncodedSignature
-  storedUrls: {
+  registry: {
     [contactId: string]: Crypto.EncodedSealedBox /* workspace url */
   }
 }
@@ -50,12 +50,8 @@ export class StoragePeer {
   swarmRootDoc(url: DocUrl) {
     const handle = this.repo.open<RootDoc>(url)
     handle.subscribe(rootDoc => {
-      Object.entries(rootDoc.storedUrls).forEach(
+      Object.entries(rootDoc.registry).forEach(
         async ([encryptedContactUrl, encryptedWorkspaceUrl]) => {
-          // const contactUrl = await this.repo.crypto.openSealedBox(
-          //   this.keyPair,
-          //   encryptedContactUrl as Crypto.EncodedSealedBox,
-          // )
           const workspaceUrl = await this.repo.crypto.openSealedBox(
             this.keyPair,
             encryptedWorkspaceUrl as Crypto.EncodedSealedBox,
@@ -66,7 +62,7 @@ export class StoragePeer {
     })
   }
 
-  swarm(url: string) {
+  swarm = (url: string) => {
     // Handle pushpin urls
     if (PushpinUrl.isPushpinUrl(url)) {
       debug(`Parsing pushpin url ${url}`)
