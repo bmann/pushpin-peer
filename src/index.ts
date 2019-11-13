@@ -40,7 +40,11 @@ async function init() {
   // Repo init
   // TODO: use a real location, not the repo root
   const repo = new Repo({ path: REPO_PATH })
-  const swarm = Hyperswarm()
+  const swarm = Hyperswarm({
+    queue: {
+      multiplex: true,
+    },
+  })
 
   console.log("Storage directory:", STORAGE_PATH)
 
