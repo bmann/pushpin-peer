@@ -557,8 +557,8 @@ hypercore@^8.2.5:
     fd-lock "^1.0.2"
 
 "hypermerge@github:automerge/hypermerge":
-  version "2.0.0-beta.14"
-  resolved "https://codeload.github.com/automerge/hypermerge/tar.gz/51b02e8da963e754c68113cb266941cc78de9a73"
+  version "2.0.0-beta.15"
+  resolved "https://codeload.github.com/automerge/hypermerge/tar.gz/764727484584ae90695a56907fef443a6c0dd471"
   dependencies:
     automerge "github:automerge/automerge#opaque-strings"
     better-sqlite3 "^5.4.3"
@@ -716,9 +716,9 @@ make-error@^1.1.1:
   integrity sha512-c3sIjNUow0+8swNwVpqoH4YCShKNFkMaw6oH1mNS2haDZQqkeZFlHS3dhoeEbKKmJB4vXpJucU6oH75aDYeE9g==
 
 memory-pager@^1.0.2:
-  version "1.5.0"
-  resolved "https://registry.yarnpkg.com/memory-pager/-/memory-pager-1.5.0.tgz#d8751655d22d384682741c972f2c3d6dfa3e66b5"
-  integrity sha512-ZS4Bp4r/Zoeq6+NLJpP+0Zzm0pR8whtGPf1XExKLJBAczGMnSi3It14OiNCStjQjM6NU1okjQGSxgEZN8eBYKg==
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/memory-pager/-/memory-pager-1.4.0.tgz#8902c72ce2fa34319adc0dae586b7d83cec6d6ac"
+  integrity sha512-ycuyV5gKpZln7HB/A11wCpAxEY9VQ2EhYU1F56pUAxvmj6OyOHtB9tkLLjAyFsPdghSP2S3Ujk3aYJCusgiMZg==
 
 merkle-tree-stream@^3.0.3:
   version "3.0.3"
