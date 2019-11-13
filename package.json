@@ -17,7 +17,7 @@
     "commander": "^2.19.0",
     "debug": "^4.1.1",
     "hypermerge": "github:automerge/hypermerge#reduce-memory-consumption",
-    "hyperswarm": "^2.2.0",
+    "hyperswarm": "^2.3.1",
     "js-crc": "^0.2.0",
     "lodash": "^4.17.11",
     "mime-types": "^2.1.22",

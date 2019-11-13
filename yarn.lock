@@ -31,10 +31,10 @@
   dependencies:
     sodium-universal "^2.0.0"
 
-"@hyperswarm/network@1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@hyperswarm/network/-/network-1.1.0.tgz#e190a6c3eb71fd225bbaa085dd6bdaf6553fe104"
-  integrity sha512-sKmHjRLz0mnWMz+jLClQ1hpWZomfTUGhJazQKHteU9U5gxinrt5O9GtmhNzBttvtm1xsCyVxtUnLfWreVFAy8g==
+"@hyperswarm/network@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@hyperswarm/network/-/network-1.1.2.tgz#dfcb7ef7f3392bbf667ebeef130ea4c451d98e97"
+  integrity sha512-LMb29j0Hn/1tOr+u+HhgHaKAkbxeb2WRPSrJ3ZhdbxbkKLb+O9b+ewKpFMBDczk79gb0GwgfSkxhFDb5w0Hp0Q==
   dependencies:
     "@hyperswarm/discovery" "^1.6.0"
     nanoresource "^1.0.0"
@@ -578,13 +578,13 @@ hypercore@^8.2.5:
     sodium-native "^2.4.6"
     streamx "^2.5.0"
 
-hyperswarm@^2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/hyperswarm/-/hyperswarm-2.2.0.tgz#c5fb47aa6ce94740141a853a2609383026b99685"
-  integrity sha512-Kzp28Qxwzmzob+JadDoMR1geigquCJHtB30tfVmM6tAm4+HSqa8tIlrR3llsiFfD2kzOmB5IHcP0/vTUiBnP7w==
+hyperswarm@^2.3.1:
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/hyperswarm/-/hyperswarm-2.3.1.tgz#dcf1bc75a4b178d0f6eadec233a4606a0b341c1c"
+  integrity sha512-lseDBart+1nx7MCBm9NA8FJTbxTe7qlvwEOYp2t1tuchXh7b+zlu3Pu8t6qlH4YUtYdRBhl64FiLiSr1657/Dw==
   dependencies:
     "@hyperswarm/discovery" "^1.1.0"
-    "@hyperswarm/network" "1.1.0"
+    "@hyperswarm/network" "^1.1.2"
     shuffled-priority-queue "^2.1.0"
     utp-native "^2.1.3"
 
