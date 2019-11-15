@@ -1,10 +1,9 @@
-import { Repo, Crypto } from "hypermerge"
-import FileServer from "hypermerge/dist/FileServer"
-import * as StoragePeer from "./StoragePeer"
 import fs from "fs"
 import path from "path"
-import { DocUrl } from "hypermerge"
 import Hyperswarm from "hyperswarm"
+import { Repo, Crypto, DocUrl } from "hypermerge"
+import FileServer from "hypermerge/dist/FileServer"
+import * as StoragePeer from "./StoragePeer"
 
 // TODO: Use a real storage path, not just the repo root.
 const VERSION = "v1"
@@ -65,6 +64,7 @@ async function init() {
   const keyPair = await getOrCreateKeyPair(repo)
   const storagePeerDoc = await getOrCreateStoragePeerDoc(repo, keyPair)
   const storagePeer = new StoragePeer.StoragePeer(repo, keyPair, storagePeerDoc)
+  storagePeer.init()
   heartbeatContacts(repo, storagePeerDoc)
 
   console.log(`Share link: ${storagePeer.shareLink}`)
