@@ -558,7 +558,7 @@ hypercore@^8.2.5:
 
 "hypermerge@github:automerge/hypermerge#crawler":
   version "2.0.0-beta.17"
-  resolved "https://codeload.github.com/automerge/hypermerge/tar.gz/99d757c201b98d11b672e5f5ad04c2399209aa4f"
+  resolved "https://codeload.github.com/automerge/hypermerge/tar.gz/45c9ae4c0f6c3a686cb7c90f5fffc787a444c8e5"
   dependencies:
     automerge "github:automerge/automerge#opaque-strings"
     better-sqlite3 "^5.4.3"
@@ -674,11 +674,6 @@ isarray@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/isarray/-/isarray-1.0.0.tgz#bb935d48582cba168c06834957a54a3e07124f11"
   integrity sha1-u5NdSFgsuhaMBoNJV6VKPgcSTxE=
-
-js-crc@^0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/js-crc/-/js-crc-0.2.0.tgz#f72c5c7618176bff75cc812a1cedbde3d8eb6839"
-  integrity sha1-9yxcdhgXa/91zIEqHO2949jraDk=
 
 js-sha1@^0.6.0:
   version "0.6.0"

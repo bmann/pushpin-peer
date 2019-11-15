@@ -1,7 +1,7 @@
 import { Repo, Crypto, Crawler, DocUrl } from "hypermerge"
 import * as PushpinUrl from "./PushpinUrl"
 
-const debug = require("debug")("pushpin-peer")
+const debug = require("debug")("storage-peer")
 
 export interface StoragePeerDoc {
   name: string
@@ -52,7 +52,7 @@ export class StoragePeer {
     this.keyPair = keyPair
     this.crawler = new Crawler(this.repo.front)
 
-    this.shareLink = PushpinUrl.createDocumentLink(
+    this.shareLink = PushpinUrl.toPushpinUrl(
       "storage-peer",
       this.registryDocUrl,
     )

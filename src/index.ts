@@ -64,6 +64,7 @@ async function init() {
   const keyPair = await getOrCreateKeyPair(repo)
   const storagePeerDoc = await getOrCreateStoragePeerDoc(repo, keyPair)
   const storagePeer = new StoragePeer.StoragePeer(repo, keyPair, storagePeerDoc)
+  storagePeer.init()
   heartbeatContacts(repo, storagePeerDoc)
 
   console.log(`Share link: ${storagePeer.shareLink}`)

@@ -8,17 +8,15 @@
   "private": true,
   "scripts": {
     "start": "ts-node src",
-    "start:inspect": "node -r ts-node/register --inspect-brk src",
+    "start-inspect": "node -r ts-node/register --inspect src",
     "build": "tsc -p .",
     "tape": "ts-node --files node_modules/tape/bin/tape tests/*.test.ts"
   },
   "dependencies": {
-    "bs58": "^4.0.1",
     "commander": "^2.19.0",
     "debug": "^4.1.1",
     "hypermerge": "github:automerge/hypermerge#crawler",
-    "hyperswarm": "^2.3.1",
-    "js-crc": "^0.2.0"
+    "hyperswarm": "^2.3.1"
   },
   "devDependencies": {
     "@types/bs58": "^4.0.0",
