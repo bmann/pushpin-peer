@@ -1,6 +1,4 @@
-import { Repo, Handle, Crypto, DocUrl } from "hypermerge/dist"
-import * as Traverse from "./Traverse"
-import * as HyperUrl from "./HyperUrl"
+import { Repo, Crypto, Crawler, DocUrl } from "hypermerge"
 import * as PushpinUrl from "./PushpinUrl"
 
 const debug = require("debug")("pushpin-peer")
@@ -39,95 +37,41 @@ export async function createRootDoc(
 
 export class StoragePeer {
   repo: Repo
+  crawler: Crawler
   keyPair: Crypto.EncodedEncryptionKeyPair
-  rootDocUrl: DocUrl
+  registryDocUrl: DocUrl
   shareLink: PushpinUrl.PushpinUrl
-  private handles: Map<string, Handle<any>>
-  private files: Set<string>
 
   constructor(
     repo: Repo,
     keyPair: Crypto.EncodedEncryptionKeyPair,
-    rootDocUrl: DocUrl,
+    registryDocUrl: DocUrl,
   ) {
     this.repo = repo
-    this.rootDocUrl = rootDocUrl
+    this.registryDocUrl = registryDocUrl
     this.keyPair = keyPair
-    this.handles = new Map()
-    this.files = new Set()
+    this.crawler = new Crawler(this.repo.front)
 
     this.shareLink = PushpinUrl.createDocumentLink(
       "storage-peer",
-      this.rootDocUrl,
+      this.registryDocUrl,
     )
-
-    this.swarmRoot(rootDocUrl)
   }
 
-  get stats() {
-    return {
-      documents: this.handles.size,
-      files: this.files.size,
-    }
-  }
-
-  swarmRoot(url: DocUrl) {
-    const handle = this.repo.open<StoragePeerDoc>(url)
-    handle.subscribe(rootDoc => {
-      Object.values(rootDoc.registry).forEach(async sealedWorkspaceUrl => {
+  init() {
+    const handle = this.repo.open<StoragePeerDoc>(this.registryDocUrl)
+    handle.subscribe(registryDoc => {
+      Object.values(registryDoc.registry).forEach(async sealedWorkspaceUrl => {
         const workspaceUrl = await this.repo.crypto.openSealedBox(
           this.keyPair,
           sealedWorkspaceUrl,
         )
-        this.onUrl(workspaceUrl)
+        this.crawler.crawl(workspaceUrl as DocUrl)
       })
     })
   }
 
-  onUrl = (url: string) => {
-    // Handle pushpin urls
-    if (PushpinUrl.isPushpinUrl(url)) {
-      debug(`Parsing pushpin url ${url}`)
-      const { docId } = PushpinUrl.parts(url)
-      this.onUrl(HyperUrl.fromDocumentId(docId))
-    }
-    // Handle hypermerge and hyperfile urls
-    else if (!this.handles.has(url) && !this.files.has(url)) {
-      // Is there a better way to ensure availability besides opening?
-      if (HyperUrl.isDocumentUrl(url)) {
-        debug(`Opening document ${url}`)
-        const handle = this.repo.open(url)
-        this.handles.set(url, handle)
-        // The `subscribe` callback may be invoked immediately,
-        // so use setImmediate to prevent locking on deep structures.
-        setImmediate(() => handle.subscribe(this.onDocumentUpdate(url)))
-      } else if (HyperUrl.isHyperfileUrl(url)) {
-        // We don't need to subscribe to hyperfile updates, we just need to swarm
-        this.files.add(url)
-        setImmediate(() =>
-          this.repo.files.header(url as any).then(() => {
-            debug(`Read file ${url}`)
-          }),
-        )
-      }
-    }
-  }
-
-  onDocumentUpdate = (url: string) => {
-    return (doc: any) => {
-      debug(`Update for ${url}`)
-      const urls = Traverse.iterativeDFS<string>(doc, this.shouldSwarm)
-      urls.forEach(this.onUrl)
-    }
-  }
-
-  shouldSwarm(val: any) {
-    return HyperUrl.isHyperUrl(val) || PushpinUrl.isPushpinUrl(val)
-  }
-
   close() {
-    this.handles.forEach(handle => handle.close())
-    this.handles.clear()
-    this.files.clear()
+    this.crawler.close()
   }
 }

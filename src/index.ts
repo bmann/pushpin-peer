@@ -1,10 +1,9 @@
-import { Repo, Crypto } from "hypermerge"
-import FileServer from "hypermerge/dist/FileServer"
-import * as StoragePeer from "./StoragePeer"
 import fs from "fs"
 import path from "path"
-import { DocUrl } from "hypermerge"
 import Hyperswarm from "hyperswarm"
+import { Repo, Crypto, DocUrl } from "hypermerge"
+import FileServer from "hypermerge/dist/FileServer"
+import * as StoragePeer from "./StoragePeer"
 
 // TODO: Use a real storage path, not just the repo root.
 const VERSION = "v1"
