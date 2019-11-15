@@ -1,4 +1,4 @@
-import { Repo, Crypto, Crawler, DocUrl } from "hypermerge"
+import { Repo, Crypto, DocUrl } from "hypermerge"
 import * as PushpinUrl from "./PushpinUrl"
 
 const debug = require("debug")("storage-peer")
@@ -37,7 +37,6 @@ export async function createRootDoc(
 
 export class StoragePeer {
   repo: Repo
-  crawler: Crawler
   keyPair: Crypto.EncodedEncryptionKeyPair
   registryDocUrl: DocUrl
   shareLink: PushpinUrl.PushpinUrl
@@ -50,7 +49,6 @@ export class StoragePeer {
     this.repo = repo
     this.registryDocUrl = registryDocUrl
     this.keyPair = keyPair
-    this.crawler = new Crawler(this.repo.front)
 
     this.shareLink = PushpinUrl.toPushpinUrl(
       "storage-peer",
@@ -66,12 +64,8 @@ export class StoragePeer {
           this.keyPair,
           sealedWorkspaceUrl,
         )
-        this.crawler.crawl(workspaceUrl as DocUrl)
+        this.repo.open(workspaceUrl as DocUrl)
       })
     })
-  }
-
-  close() {
-    this.crawler.close()
   }
 }
