@@ -2,6 +2,7 @@ import fs from "fs"
 import path from "path"
 import Hyperswarm from "hyperswarm"
 import { Repo, Crypto, DocUrl } from "hypermerge"
+import Client from "discovery-cloud"
 import FileServer from "hypermerge/dist/FileServer"
 import * as StoragePeer from "./StoragePeer"
 
@@ -39,6 +40,7 @@ async function init() {
   // Repo init
   // TODO: use a real location, not the repo root
   const repo = new Repo({ path: REPO_PATH })
+  const cloud = new Client({ host: "pushpin-relay.herokuapp.com", port: 80 })
   const swarm = Hyperswarm({
     queue: {
       multiplex: true,
@@ -59,6 +61,7 @@ async function init() {
   }
 
   repo.setSwarm(swarm)
+  repo.setSwarm(cloud)
   repo.startFileServer("/tmp/storage-peer.sock")
 
   const keyPair = await getOrCreateKeyPair(repo)
