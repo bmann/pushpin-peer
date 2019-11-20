@@ -9,7 +9,7 @@ export interface StoragePeerDoc {
   encryptionKey?: Crypto.EncodedPublicEncryptionKey
   encryptionKeySignature?: Crypto.EncodedSignature
   registry: {
-    [contactId: string]: Crypto.EncodedSealedBox /* sealed workspace url */
+    [contactId: string]: Crypto.EncodedSealedBoxCiphertext /* sealed workspace url */
   }
 }
 
@@ -29,7 +29,7 @@ export async function createRootDoc(
   const encryptionKeySignature = await repo.crypto.sign(url, encryptionKey)
   repo.change<StoragePeerDoc>(url, async doc => {
     doc.encryptionKey = encryptionKey
-    doc.encryptionKeySignature = encryptionKeySignature
+    doc.encryptionKeySignature = encryptionKeySignature.signature
   })
 
   return url
