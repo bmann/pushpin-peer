@@ -15,6 +15,7 @@
   "dependencies": {
     "commander": "^2.19.0",
     "debug": "^4.1.1",
+    "discovery-cloud": "^1.0.8",
     "hypermerge": "github:automerge/hypermerge",
     "hyperswarm": "^2.3.1"
   },
