@@ -40,7 +40,7 @@ async function init() {
   // Repo init
   // TODO: use a real location, not the repo root
   const repo = new Repo({ path: REPO_PATH })
-  const cloud = new Client({ host: "pushpin-relay.herokuapp.com", port: 80 })
+  const cloud = new Client({ url: "wss://pushpin-relay.herokuapp.com" })
   const swarm = Hyperswarm({
     queue: {
       multiplex: true,
@@ -60,8 +60,8 @@ async function init() {
     fileServer.listen({ host: "0.0.0.0", port: program.fileServerPort })
   }
 
-  repo.setSwarm(swarm)
-  repo.setSwarm(cloud)
+  repo.addSwarm(swarm)
+  repo.addSwarm(cloud)
   repo.startFileServer("/tmp/storage-peer.sock")
 
   const keyPair = await getOrCreateKeyPair(repo)
