@@ -1,5 +1,7 @@
-import { Repo, Crypto, DocUrl } from "hypermerge"
+import { Repo, Crypto, DocUrl, Handle } from "hypermerge"
 import * as PushpinUrl from "./PushpinUrl"
+import { InviteMonitor } from "./InviteMonitor"
+import { getOrCreate } from "./Misc"
 
 const debug = require("debug")("storage-peer")
 
@@ -40,6 +42,8 @@ export class StoragePeer {
   keyPair: Crypto.EncodedEncryptionKeyPair
   registryDocUrl: DocUrl
   shareLink: PushpinUrl.PushpinUrl
+  handles: Map<DocUrl, Handle<any>>
+  inviteMonitors: Map<DocUrl, InviteMonitor>
 
   constructor(
     repo: Repo,
@@ -49,23 +53,42 @@ export class StoragePeer {
     this.repo = repo
     this.registryDocUrl = registryDocUrl
     this.keyPair = keyPair
+    this.handles = new Map()
+    this.inviteMonitors = new Map()
 
-    this.shareLink = PushpinUrl.toPushpinUrl(
-      "storage-peer",
-      this.registryDocUrl,
-    )
+    this.shareLink = PushpinUrl.fromDocUrl("storage-peer", this.registryDocUrl)
   }
 
   init() {
-    const handle = this.repo.open<StoragePeerDoc>(this.registryDocUrl)
+    const handle = this.open<StoragePeerDoc>(this.registryDocUrl)
     handle.subscribe(registryDoc => {
       Object.values(registryDoc.registry).forEach(async sealedWorkspaceUrl => {
         const workspaceUrl = await this.repo.crypto.openSealedBox(
           this.keyPair,
           sealedWorkspaceUrl,
         )
-        this.repo.open(workspaceUrl as DocUrl)
+        this.register(workspaceUrl as DocUrl)
       })
     })
+  }
+
+  register(workspaceUrl: DocUrl) {
+    this.open(workspaceUrl)
+    getOrCreate(
+      this.inviteMonitors,
+      workspaceUrl,
+      url => new InviteMonitor(this.repo, url),
+    )
+  }
+
+  open<T>(url: DocUrl): Handle<T> {
+    return getOrCreate(this.handles, url, url => this.repo.open<T>(url))
+  }
+
+  close() {
+    this.handles.forEach(handle => handle.close())
+    this.handles.clear()
+    this.inviteMonitors.forEach(monitor => monitor.close())
+    this.inviteMonitors.clear()
   }
 }

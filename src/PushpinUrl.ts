@@ -2,7 +2,7 @@ import { DocUrl } from "hypermerge"
 
 export type PushpinUrl = string & { __pushpinUrl: true }
 
-export function toPushpinUrl(type: string, url: DocUrl): PushpinUrl {
+export function fromDocUrl(type: string, url: DocUrl): PushpinUrl {
   if (!url.match("hypermerge:/")) {
     throw new Error("expecting a hypermerge URL as input")
   }
@@ -18,4 +18,8 @@ export function toPushpinUrl(type: string, url: DocUrl): PushpinUrl {
     throw new Error("no type when creating URL")
   }
   return `hypermerge:/${id}?pushpinContentType=${type}` as PushpinUrl
+}
+
+export function toDocUrl(url: PushpinUrl): DocUrl {
+  return url.split("?")[0] as DocUrl
 }
